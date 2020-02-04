@@ -11,32 +11,152 @@
 //- Evidenziare le festività nella lista
 
 
-$(document).ready(function() {
+$(document).ready(function () {
+  //vado a stampare dei numeri che rappresentano i giorni del mese
+  //parto da gennaio che ha 31 giorni
 
-  for (var i = 1; i <= 31; i++) {
-    console.log() ;
-    var source = $("#entry-template").html();
+  var thisMonth = 0;
+  var year = 2018;
+  var baseMonth = moment(
+    {
+      year: year,
+      month: thisMonth
+    }
+  );
+
+  var lastMonth = 11;
+
+
+
+  printMonth(baseMonth);
+  printHoliday(baseMonth);
+
+  // quando clicchiamo su next
+  $('#next').click(function () {
+    //dobbiamo andare avanti di un mese e chiamare la funzione che genera i giorni e poi chiamare quella che crea le festivita
+    if (lastMonth > 11) {
+      alert('Calendario 2019 non disponibile al momento');
+
+    } 
+
+    }
+    var thisMonth = $('h1').attr('data-this-month');
+    var date = moment(thisMonth).add(1, 'months');
+    console.log(date);
+
+
+    printMonth(date);
+    printHoliday(date);
+  });
+
+  $('#prev').click(function () {
+    var thisMonth = $('h1').attr('data-this-month');
+    var date = moment(thisMonth).subtract(1, 'months');
+    console.log(date);
+
+
+    printMonth(date);
+    printHoliday(date);
+  });
+
+
+
+});
+
+
+
+// FUNCTION -----------------------
+
+function printMonth(month) {
+  $('.days').html('');
+  //inseriamo h1 dinamicamente
+  $('h1').text(month.format('MMMM YYYY'));
+  $('h1').attr('data-this-month', month.format('YYYY-MM'));
+
+  //quanti giorni ha il mese corrente?
+  var daysInMonth = month.daysInMonth();
+
+  // faccio un ciclo che parte da 1 fino a 31 incluso
+  for (var i = 1; i <= daysInMonth ; i++) {
+    // console.log(i);
+    // "2018-01-06"
+
+    var source = $('#entry-template').html();
     var template = Handlebars.compile(source);
     var context = {
-      date: moment(i + '/01/2018', 'D/MM/YYYY', true).format('D MMMM'),
+      day: i,
+      month: month.format('MMMM'),
+      dateComplete: month.format('YYYY-MM') + '-' + addZero(i)
     };
-    console.log(context.date);
     var html = template(context);
-    $('.lista-giorni').append(html);
+    $('.days').append(html);
   }
-  $.ajax({
-       url : "https://flynn.boolean.careers/exercises/api/holidays?year=2018&month=0",
-       method : "GET",
-       success : function(dati) {
-       console.log(dati.response[0].date);
-      for (var i = 0; i < dati.response.length; i++) {
-      var DataDaConsiderare = moment(dati.response[i].date, 'YYYY-MM-DD', true).format('D MMMM');
-      console.log(DataDaConsiderare);
-      for (var key = 0; k <= 31; k++) {
-        if (DataDaConsiderare == $('.lista-giorni li').eq(key).text()) {
-          $('.lista-giorni li').eq(key).append(' - ' + dati.response[i].name);
-          $('.lista-giorni li').eq(key).addClass('red');
+}
+
+function addZero(num) {
+  if(num < 10) {
+    return '0' + num;
+  }
+  return num;
+}
+
+
+function printHoliday(month) {
+  // console.log(month.month());
+  // console.log(month.year());
+  $.ajax(
+    {
+      url: 'https://flynn.boolean.careers/exercises/api/holidays',
+      method: 'GET',
+      data: {
+        year: month.year(),
+        month: month.month()
+      },
+      success: function (data) {
+        // console.log(data.response);
+        var holidays = data.response;
+        //prendo ogni holidays e la confronto con ogni li sul dom se quel li contiene la stessa data allora la coloro di rosso
+
+        //ciclo sugli elementi di holidays
+        for (var i = 0; i < holidays.length; i++) {
+          var thisHoliday = holidays[i];
+          // console.log(thisHoliday);
+          var thisHolidayData = thisHoliday.date;
+          // console.log(thisHolidayData);
+          //confrontare questa data con tutte le date negli li
+          //ciclo sgli li usando jquery
+          // $('.day').each(function () {
+          //   var elementDate = $(this).attr('data-date-complete');
+          //   // console.log(elementDate);
+          //   if(thisHolidayData == elementDate) {
+          //     $(this).addClass('red');
+          //     $(this).find('.nome-festivita').append(thisHoliday.name);
+          //   }
+          // });
+
+          //metodo con data attr
+          $('li[data-date-complete="'+ thisHolidayData  +'"]').addClass('red');
+          $('li[data-date-complete="'+ thisHolidayData  +'"]').find('.nome-festivita').append(thisHoliday.name);
+          // 'li[data-date-complete="2018-01-01"]'
         }
+      },
+      error: function () {
+        alert('errore');
       }
     }
-});
+  );
+}
+
+// {
+//     "success": true,
+//     "response": [
+//         {
+//             "name": "Capodanno",
+//             "date": "2018-01-01"
+//         },
+//         {
+//             "name": "Epifania",
+//             "date": "2018-01-06"
+//         }
+//     ]
+// }
