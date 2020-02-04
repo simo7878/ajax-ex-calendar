@@ -37,7 +37,8 @@ $(document).ready(function () {
     if (lastMonth > 11) {
       alert('Calendario 2019 non disponibile al momento');
 
-    } 
+    } else {
+      alert('continua la selezione');
 
     }
     var thisMonth = $('h1').attr('data-this-month');
